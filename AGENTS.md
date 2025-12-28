@@ -6,25 +6,35 @@ This project is a modern web application built with **SvelteKit**, **Svelte 5**,
 ## 1. Environment & Commands
 
 ### Build & Verification
+
 Always run verification commands after making changes.
 
 - **Type Check**: `npm run check`
   - Runs `svelte-check` to verify TypeScript types and Svelte component usage.
   - **Critical**: Must pass before finishing any task.
-- **Build**: `npm run build`
-  - Compiles the application for production using Vite.
-  - Ensures no build-time errors exist.
-- **Dev Server**: `npm run dev`
-  - Starts the local development server.
+	- **Build**: `npm run build`
+		- Compiles the application for production using Vite.
+		- Ensures no build-time errors exist.
+	- **Lint**: `npm run lint`
+		- Runs Prettier check and ESLint.
+	- **Format**: `npm run format`
+		- Runs Prettier write to fix formatting issues.
+	- **Dev Server**: `npm run dev`
+		- Starts the local development server.
 
 ### Testing
-*Currently, no unit testing framework (like Vitest) is installed.*
-- Primary verification is done via `npm run check` and `npm run build`.
-- If implementing features requiring logic verification, consider suggesting the installation of Vitest.
+
+- **Unit Tests**: `npm run test`
+	- Runs Vitest for unit testing.
+	- Use for testing utilities and complex component logic.
+- **Type Check**: `npm run check`
+	- Runs `svelte-check`.
+
 
 ## 2. Tech Stack & Conventions
 
 ### Core Technologies
+
 - **Framework**: SvelteKit (File-based routing in `src/routes`)
 - **UI Library**: Svelte 5 (Runes mode)
 - **Styling**: Tailwind CSS v4 (CSS-first configuration)
@@ -32,35 +42,39 @@ Always run verification commands after making changes.
 - **Language**: TypeScript
 
 ### Svelte 5 Guidelines (Runes)
+
 **DO NOT** use legacy Svelte 4 syntax (e.g., `export let prop`, `$: derived`).
 Use Svelte 5 Runes for all reactivity.
 
 **Props:**
+
 ```svelte
 <script lang="ts">
-  interface Props {
-    title: string;
-    count?: number;
-    children?: import('svelte').Snippet;
-  }
-  let { title, count = 0, children }: Props = $props();
+	interface Props {
+		title: string;
+		count?: number;
+		children?: import('svelte').Snippet;
+	}
+	let { title, count = 0, children }: Props = $props();
 </script>
 ```
 
 **State & Derived:**
+
 ```svelte
 <script lang="ts">
-  let count = $state(0);
-  let double = $derived(count * 2);
+	let count = $state(0);
+	let double = $derived(count * 2);
 
-  function increment() {
-    count += 1;
-  }
+	function increment() {
+		count += 1;
+	}
 </script>
 ```
 
 **Effects:**
 Use `$effect` sparingly, primarily for synchronization with external systems (DOM, API).
+
 ```svelte
 $effect(() => {
   console.log(count);
@@ -68,21 +82,22 @@ $effect(() => {
 ```
 
 ### Tailwind CSS v4 Guidelines
+
 This project uses **Tailwind CSS v4**.
+
 - **Configuration**: Managed in `src/app.css` using CSS variables and `@theme` blocks.
 - **No `tailwind.config.js`**: Do not look for or create this file.
 - **Dynamic Classes**: Use the `cn()` utility from `$lib/utils` to merge classes and resolve conflicts.
 
 **Example:**
+
 ```svelte
 <script lang="ts">
-  import { cn } from '$lib/utils';
-  let { class: className } = $props();
+	import { cn } from '$lib/utils';
+	let { class: className } = $props();
 </script>
 
-<div class={cn("bg-primary text-primary-foreground p-4", className)}>
-  Content
-</div>
+<div class={cn('bg-primary text-primary-foreground p-4', className)}>Content</div>
 ```
 
 **CSS Variables (Shadcn):**
@@ -90,11 +105,13 @@ The theme is defined in `src/app.css`. Use HSL variables (e.g., `--primary`, `--
 Use the `dark` class variant for dark mode overrides.
 
 ### Shadcn-svelte Components
+
 - **Location**: `src/lib/components/ui`
 - **Installation**: Use the CLI for new components: `npx shadcn-svelte@latest add [component]`
 - **Structure**: Components are "owned" code. You can modify them directly if needed, but prefer wrapping or extending.
 
 ### TypeScript Rules
+
 - **Strict Mode**: Enabled.
 - **Explicit Types**: Avoid `any`. Define interfaces for props and API responses.
 - **Imports**: Always use the `$lib` alias for internal imports.
@@ -135,12 +152,13 @@ src/
 ## 5. Common Patterns & Snippets
 
 **Class Merging:**
+
 ```typescript
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+	return twMerge(clsx(inputs));
 }
 ```
 
@@ -154,15 +172,15 @@ For client-side state, bind using `$state`.
 
 ```svelte
 <script>
-  let email = $state('');
-  
-  function handleSubmit(e: Event) {
-    e.preventDefault();
-    // handle submit
-  }
+	let email = $state('');
+
+	function handleSubmit(e: Event) {
+		e.preventDefault();
+		// handle submit
+	}
 </script>
 
 <form onsubmit={handleSubmit}>
-  <input bind:value={email} />
+	<input bind:value={email} />
 </form>
 ```
