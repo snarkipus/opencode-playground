@@ -12,24 +12,23 @@ Always run verification commands after making changes.
 - **Type Check**: `npm run check`
   - Runs `svelte-check` to verify TypeScript types and Svelte component usage.
   - **Critical**: Must pass before finishing any task.
-	- **Build**: `npm run build`
-		- Compiles the application for production using Vite.
-		- Ensures no build-time errors exist.
-	- **Lint**: `npm run lint`
-		- Runs Prettier check and ESLint.
-	- **Format**: `npm run format`
-		- Runs Prettier write to fix formatting issues.
-	- **Dev Server**: `npm run dev`
-		- Starts the local development server.
+- **Build**: `npm run build`
+  - Compiles the application for production using Vite.
+  - Ensures no build-time errors exist.
+- **Lint**: `npm run lint`
+  - Runs Prettier check and ESLint.
+- **Format**: `npm run format`
+  - Runs Prettier write to fix formatting issues.
+- **Dev Server**: `npm run dev`
+  - Starts the local development server.
 
 ### Testing
 
 - **Unit Tests**: `npm run test`
-	- Runs Vitest for unit testing.
-	- Use for testing utilities and complex component logic.
+  - Runs Vitest for unit testing.
+  - Use for testing utilities and complex component logic.
 - **Type Check**: `npm run check`
-	- Runs `svelte-check`.
-
+  - Runs `svelte-check`.
 
 ## 2. Tech Stack & Conventions
 
