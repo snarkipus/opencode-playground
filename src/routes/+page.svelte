@@ -24,7 +24,7 @@
 
 	{#if browser}
 		<!-- 3D Scene Demo -->
-		<div class="relative mt-4 h-[560px] w-full overflow-hidden rounded-lg border">
+		<div class="relative mt-4 h-140 w-full overflow-hidden rounded-lg border">
 			<Canvas>
 				<Scene {paused} />
 			</Canvas>
