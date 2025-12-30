@@ -12,8 +12,8 @@
 		ChevronRight,
 		Info,
 		MousePointer2,
-		Loader2
-	} from 'lucide-svelte';
+		Loader
+	} from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
 
 	let paused = $state(true);
@@ -73,7 +73,7 @@
 						class="text-primary/80 flex items-center justify-between text-[10px] font-bold tracking-[0.3em] uppercase"
 					>
 						<span class="flex items-center gap-2">
-							<Loader2 class="size-3 animate-spin" />
+							<Loader class="size-3 animate-spin" />
 							Initializing Systems
 						</span>
 						<span>{Math.round(loadProgress * 100)}%</span>
