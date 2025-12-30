@@ -72,8 +72,11 @@
 			const dt = Math.min(delta, 0.1);
 			const lerpFactor = 1 - Math.exp(-dt * 4);
 
-			// Interpolate ship rotation back to 0
-			rotation += (0 - rotation) * lerpFactor;
+			// Interpolate ship rotation back to 0 (shortest path)
+			let deltaRot = 0 - rotation;
+			while (deltaRot > Math.PI) deltaRot -= Math.PI * 2;
+			while (deltaRot < -Math.PI) deltaRot += Math.PI * 2;
+			rotation += deltaRot * lerpFactor;
 
 			if (camera.current) {
 				const posArray = viewPositions[targetView];
@@ -113,7 +116,7 @@
 				}
 			}
 		} else if (!paused) {
-			rotation += delta * 0.5;
+			rotation = (rotation + delta * 0.5) % (Math.PI * 2);
 		}
 	});
 </script>
