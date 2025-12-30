@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T, useThrelte, useTask } from '@threlte/core';
-	import { OrbitControls, useGltf } from '@threlte/extras';
-	import { Color, Vector3, Box3 } from 'three';
+	import { OrbitControls, useGltf, ContactShadows, Grid } from '@threlte/extras';
+	import { Vector3, Box3, Spherical, Mesh } from 'three';
 
 	interface Props {
 		paused: boolean;
@@ -12,10 +12,23 @@
 	let { paused, targetView = null, onTransitionComplete }: Props = $props();
 	let rotation = $state(0);
 
-	let center = $state(new Vector3(0, 0, 0));
-	let offset = $state(new Vector3(0, 0, 0));
+	// Pre-allocate stable Three.js objects for useTask (high frequency)
+	const targetPos = new Vector3();
+	const currentDir = new Vector3();
+	const targetDir = new Vector3();
+	const finalDir = new Vector3();
+	const currentSpherical = new Spherical();
+	const targetSpherical = new Spherical();
+
+	// Use $state for reactive properties used in the template
 	let size = $state(10);
-	const verticalShift = $derived(size * 0.05);
+	let offset = $state(new Vector3(0, 0, 0));
+	const verticalShift = $derived(size * 0.05 + 2.5); // Slightly higher base offset
+
+	// Pre-allocated but reactive vectors for camera logic
+	const shipCenter = $derived(new Vector3(0, verticalShift, 0));
+	// Look even lower to move the ship up in the viewport
+	const cameraTarget = $derived(new Vector3(0, verticalShift - size * 0.25, 0));
 
 	const { camera, scene } = useThrelte();
 	const gltf = useGltf('/models/ship_pinnace1.glb');
@@ -28,11 +41,17 @@
 			const boxSize = new Vector3();
 			box.getSize(boxSize);
 
-			// Auto-center the model by calculating the negative offset of its bounding box center
+			// Enable shadows for all meshes in the model
+			$gltf.scene.traverse((node) => {
+				if (node instanceof Mesh) {
+					node.castShadow = true;
+					node.receiveShadow = true;
+				}
+			});
+
+			// Auto-center the model
 			offset = boxCenter.clone().multiplyScalar(-1);
 			size = Math.max(boxSize.x, boxSize.y, boxSize.z);
-			// We keep the target center at origin for simplicity
-			center = new Vector3(0, 0, 0);
 		}
 	});
 
@@ -43,48 +62,53 @@
 		back: [0, size * 0.2, -size * 1.0],
 		left: [-size * 1.0, size * 0.2, 0],
 		right: [size * 1.0, size * 0.2, 0],
-		top: [0, size * 1.0, 0],
+		top: [0, size * 1.1, 0.001], // Small Z offset to avoid Gimbal Lock
 		initial: defaultCameraPosition
-	});
-
-	const visualCenter = $derived(new Vector3(0, verticalShift, 0));
-
-	$effect(() => {
-		if (scene) {
-			scene.background = new Color('aliceblue');
-		}
 	});
 
 	useTask((delta) => {
 		if (targetView) {
-			const lerpFactor = 1 - Math.exp(-delta * 5);
+			// Limit delta to prevent large jumps on frame drops
+			const dt = Math.min(delta, 0.1);
+			const lerpFactor = 1 - Math.exp(-dt * 4);
 
 			// Interpolate ship rotation back to 0
 			rotation += (0 - rotation) * lerpFactor;
 
 			if (camera.current) {
-				const targetPos = new Vector3(...viewPositions[targetView]);
+				const posArray = viewPositions[targetView];
+				targetPos.set(posArray[0], posArray[1], posArray[2]);
 
 				// 1. Interpolate Distance
-				const currentDist = camera.current.position.distanceTo(visualCenter);
-				const targetDist = targetPos.distanceTo(visualCenter);
+				const currentDist = camera.current.position.distanceTo(shipCenter);
+				const targetDist = targetPos.distanceTo(shipCenter);
 				const newDist = currentDist + (targetDist - currentDist) * lerpFactor;
 
-				// 2. Interpolate Direction (Spherical)
-				const currentDir = new Vector3()
-					.subVectors(camera.current.position, visualCenter)
-					.normalize();
-				const targetDir = new Vector3().subVectors(targetPos, visualCenter).normalize();
+				// 2. Interpolate Direction (Spherical coordinates for smooth orbiting)
+				currentDir.subVectors(camera.current.position, shipCenter).normalize();
+				targetDir.subVectors(targetPos, shipCenter).normalize();
 
-				// We use lerp + normalize as a fast approximation of slerp for direction vectors
-				currentDir.lerp(targetDir, lerpFactor).normalize();
+				currentSpherical.setFromVector3(currentDir);
+				targetSpherical.setFromVector3(targetDir);
+
+				// Shortest path interpolation for theta (horizontal angle)
+				let deltaTheta = targetSpherical.theta - currentSpherical.theta;
+				if (deltaTheta > Math.PI) deltaTheta -= Math.PI * 2;
+				if (deltaTheta < -Math.PI) deltaTheta += Math.PI * 2;
+
+				currentSpherical.theta += deltaTheta * lerpFactor;
+				currentSpherical.phi += (targetSpherical.phi - currentSpherical.phi) * lerpFactor;
+				currentSpherical.radius = 1;
+
+				finalDir.setFromSpherical(currentSpherical);
 
 				// 3. Set New Position
-				camera.current.position.copy(visualCenter).add(currentDir.multiplyScalar(newDist));
-				camera.current.lookAt(visualCenter);
+				camera.current.position.copy(shipCenter).add(finalDir.multiplyScalar(newDist));
+				camera.current.lookAt(cameraTarget);
 
 				// 4. Check for completion
-				if (camera.current.position.distanceTo(targetPos) < 0.1 && Math.abs(rotation) < 0.01) {
+				const distToTarget = camera.current.position.distanceTo(targetPos);
+				if (distToTarget < 0.01 && Math.abs(rotation) < 0.001) {
 					onTransitionComplete?.();
 				}
 			}
@@ -96,20 +120,20 @@
 
 <!-- Perspective Camera -->
 <T.PerspectiveCamera makeDefault position={defaultCameraPosition} fov={70}>
-	<OrbitControls enabled={!targetView} target={[visualCenter.x, visualCenter.y, visualCenter.z]} />
+	<OrbitControls enabled={!targetView} target={[cameraTarget.x, cameraTarget.y, cameraTarget.z]} />
 </T.PerspectiveCamera>
 
 <!-- Ambient Light for base illumination -->
-<T.AmbientLight intensity={0.6} />
+<T.AmbientLight intensity={0.8} />
 
 <!-- Key Light (main directional) -->
-<T.DirectionalLight position={[10, 10, 5]} intensity={2} />
+<T.DirectionalLight position={[15, 15, 10]} intensity={2.5} castShadow />
 
 <!-- Fill Light (softer, opposite side) -->
-<T.DirectionalLight position={[-5, 5, 10]} intensity={0.8} />
+<T.DirectionalLight position={[-10, 10, 15]} intensity={1.2} />
 
-<!-- Rim Light (from behind for edge highlighting) -->
-<T.DirectionalLight position={[-10, 5, -10]} intensity={0.5} />
+<!-- Rim Light -->
+<T.DirectionalLight position={[-15, 10, -15]} intensity={2.0} color="#4477ff" />
 
 <!-- Rotating Ship Model -->
 <T.Group position={[0, verticalShift, 0]} rotation={[0, rotation, 0]}>
@@ -117,3 +141,27 @@
 		<T is={$gltf.scene} position={[offset.x, offset.y, offset.z]} />
 	{/if}
 </T.Group>
+
+<ContactShadows
+	position.y={-verticalShift}
+	scale={size * 2}
+	blur={2}
+	far={size}
+	opacity={0.5}
+	color="#000000"
+/>
+
+<Grid
+	position.y={-verticalShift}
+	sectionSize={size / 5}
+	sectionThickness={1}
+	sectionColor="#333333"
+	gridSize={size * 4}
+	cellSize={size / 20}
+	cellThickness={0.5}
+	cellColor="#222222"
+	infiniteGrid
+	fadeDistance={size * 3}
+	fadeStrength={5}
+	receiveShadow
+/>

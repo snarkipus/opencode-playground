@@ -81,6 +81,18 @@
 		@apply border-border;
 	}
 	body {
-		@apply bg-background text-foreground;
+		@apply bg-background text-foreground overflow-hidden;
+		background: radial-gradient(
+			circle at 50% 40%,
+			hsl(210 30% 12%) 0%,
+			hsl(220 25% 6%) 45%,
+			hsl(240 20% 2%) 100%
+		);
+	}
+}
+
+@layer utilities {
+	.glass {
+		@apply bg-background/20 border border-white/10 shadow-xl backdrop-blur-md;
 	}
 }
