@@ -1,14 +1,27 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index';
+	import { Progress } from '$lib/components/ui/progress/index';
 	import Scene from '$lib/components/Scene.svelte';
 	import { Canvas } from '@threlte/core';
 	import { browser } from '$app/environment';
 	import { WebGLRenderer } from 'three';
-	import { Pause, Play, RefreshCw, ChevronRight, Info, MousePointer2 } from 'lucide-svelte';
+	import {
+		Pause,
+		Play,
+		RefreshCw,
+		ChevronRight,
+		Info,
+		MousePointer2,
+		Loader2
+	} from 'lucide-svelte';
+	import { fade } from 'svelte/transition';
 
-	let paused = $state(false);
+	let paused = $state(true);
 	type View = 'front' | 'back' | 'left' | 'right' | 'top';
-	let targetView = $state<View | 'initial' | null>(null);
+	let targetView = $state<View | 'initial' | null>('initial');
+	let loadProgress = $state(0);
+
+	let isLoaded = $derived(loadProgress >= 1);
 
 	function togglePause() {
 		paused = !paused;
@@ -40,9 +53,38 @@
 			<Canvas
 				createRenderer={(canvas) => new WebGLRenderer({ canvas, antialias: true, alpha: true })}
 			>
-				<Scene {paused} {targetView} onTransitionComplete={handleTransitionComplete} />
+				<Scene
+					{paused}
+					{targetView}
+					onTransitionComplete={handleTransitionComplete}
+					onProgress={(p) => (loadProgress = p)}
+				/>
 			</Canvas>
 		</div>
+
+		<!-- Loading Overlay -->
+		{#if !isLoaded}
+			<div
+				out:fade={{ duration: 1000 }}
+				class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md"
+			>
+				<div class="flex w-64 flex-col gap-4">
+					<div
+						class="text-primary/80 flex items-center justify-between text-[10px] font-bold tracking-[0.3em] uppercase"
+					>
+						<span class="flex items-center gap-2">
+							<Loader2 class="size-3 animate-spin" />
+							Initializing Systems
+						</span>
+						<span>{Math.round(loadProgress * 100)}%</span>
+					</div>
+					<Progress value={loadProgress * 100} class="h-1 bg-white/10" />
+					<div class="text-center text-[8px] tracking-[0.2em] text-white/30 uppercase">
+						Synchronizing GLB Asset: Ship_Pinnace_V1
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		<!-- UI Overlay -->
 		<div

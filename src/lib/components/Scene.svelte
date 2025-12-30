@@ -1,16 +1,23 @@
 <script lang="ts">
 	import { T, useThrelte, useTask } from '@threlte/core';
-	import { OrbitControls, useGltf, ContactShadows, Grid } from '@threlte/extras';
+	import { OrbitControls, useGltf, ContactShadows, Grid, useProgress } from '@threlte/extras';
 	import { Vector3, Box3, Spherical, Mesh } from 'three';
 
 	interface Props {
 		paused: boolean;
 		targetView?: 'front' | 'back' | 'left' | 'right' | 'top' | 'initial' | null;
 		onTransitionComplete?: () => void;
+		onProgress?: (progress: number) => void;
 	}
 
-	let { paused, targetView = null, onTransitionComplete }: Props = $props();
+	let { paused, targetView = null, onTransitionComplete, onProgress }: Props = $props();
 	let rotation = $state(0);
+
+	const { progress } = useProgress();
+
+	$effect(() => {
+		onProgress?.($progress);
+	});
 
 	// Pre-allocate stable Three.js objects for useTask (high frequency)
 	const targetPos = new Vector3();
@@ -52,6 +59,7 @@
 			// Auto-center the model
 			offset = boxCenter.clone().multiplyScalar(-1);
 			size = Math.max(boxSize.x, boxSize.y, boxSize.z);
+			rotation = 0; // Reset rotation to 0 when model appears
 		}
 	});
 
@@ -111,7 +119,8 @@
 
 				// 4. Check for completion
 				const distToTarget = camera.current.position.distanceTo(targetPos);
-				if (distToTarget < 0.01 && Math.abs(rotation) < 0.001) {
+				// Ensure model is loaded and we are close to target before completing
+				if ($gltf && distToTarget < 0.01 && Math.abs(rotation) < 0.001) {
 					onTransitionComplete?.();
 				}
 			}
