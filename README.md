@@ -1,38 +1,52 @@
-# sv
+# 🚢 CORE-EXPLORER V1
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+An immersive, high-performance 3D interactive viewer for naval assets, built with the cutting edge of modern web technology.
 
-## Creating a project
+## ✨ Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Interactive 3D Navigation:** Full 6DOF exploration using OrbitControls with smooth damping and zoom.
+- **Cinematic Snap-to-View:** Intelligent camera system that uses **Spherical Interpolation (Slerp)** to transition between Front, Back, Left, Right, and Top profile views without "cutting through" the model.
+- **HUD-Style Interface:** A minimal, professional "Command Center" UI featuring **Glassmorphism**, high-contrast typography, and Lucide icons.
+- **Autonomous Model Centering:** Automatically calculates bounding boxes for any GLTF model to center, scale, and focus the camera perfectly upon loading.
+- **Deep-Sea Aesthetic:** A nuanced, radial-gradient background with oceanic hues and tuned cinematic lighting (Rim, Key, and Fill).
+- **Advanced Shadows:** Combines sharp real-time directional shadows with soft, high-fidelity `ContactShadows` for a "product-shot" finish.
 
-```sh
-# create a new project in the current directory
-npx sv create
+## 🛠️ Tech Stack
 
-# create a new project in my-app
-npx sv create my-app
-```
+- **[Svelte 5](https://svelte.dev):** Leveraging the power of **Runes** (`$state`, `$derived`, `$effect`) for ultra-efficient, fine-grained reactivity.
+- **[Threlte 8](https://threlte.xyz):** A declarative, component-based Three.js wrapper for Svelte that brings 3D into the reactive graph.
+- **[Tailwind CSS v4](https://tailwindcss.com):** Using the new CSS-first engine for rapid, high-performance styling.
+- **[Shadcn-svelte](https://shadcn-svelte.com):** High-quality, accessible UI components built with Radix Svelte and Tailwind.
+- **[SvelteKit](https://kit.svelte.dev):** The full-stack framework for the modern web.
+- **[Three.js](https://threejs.org):** The industry-standard 3D engine.
 
-## Developing
+## 🚀 Performance
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Designed for **60+ FPS** performance:
 
-```sh
-npm run dev
+- **Zero GC Pressure:** All high-frequency vectors, sphericals, and matrices are pre-allocated and updated in-place during the `useTask` loop.
+- **Frame-rate Independence:** All camera animations are time-scaled using exponential decay, ensuring smooth movement regardless of monitor refresh rate.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## 📦 Getting Started
 
-## Building
+1. **Clone & Install:**
 
-To create a production version of your app:
+   ```bash
+   git clone https://github.com/snarkipus/opencode-playground.git
+   npm install
+   ```
 
-```sh
-npm run build
-```
+2. **Run Development:**
 
-You can preview the production build with `npm run preview`.
+   ```bash
+   npm run dev
+   ```
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+3. **Build for Production:**
+   ```bash
+   npm run build
+   ```
+
+---
+
+_Built with precision using the OpenCode Agent Framework._
