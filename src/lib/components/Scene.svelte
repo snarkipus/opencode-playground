@@ -124,16 +124,16 @@
 </T.PerspectiveCamera>
 
 <!-- Ambient Light for base illumination -->
-<T.AmbientLight intensity={0.8} />
+<T.AmbientLight intensity={0.6} />
 
 <!-- Key Light (main directional) -->
-<T.DirectionalLight position={[15, 15, 10]} intensity={2.5} castShadow />
+<T.DirectionalLight position={[15, 15, 10]} intensity={2.0} castShadow />
 
 <!-- Fill Light (softer, opposite side) -->
-<T.DirectionalLight position={[-10, 10, 15]} intensity={1.2} />
+<T.DirectionalLight position={[-10, 10, 15]} intensity={1.0} />
 
 <!-- Rim Light -->
-<T.DirectionalLight position={[-15, 10, -15]} intensity={2.0} color="#4477ff" />
+<T.DirectionalLight position={[-15, 10, -15]} intensity={1.5} />
 
 <!-- Rotating Ship Model -->
 <T.Group position={[0, verticalShift, 0]} rotation={[0, rotation, 0]}>
