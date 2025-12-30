@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { T, useThrelte, useTask } from '@threlte/core';
-	import { OrbitControls, useGltf, ContactShadows, Grid, useProgress } from '@threlte/extras';
+	import {
+		OrbitControls,
+		useGltf,
+		ContactShadows,
+		Grid,
+		useProgress,
+		useDraco,
+		useMeshopt
+	} from '@threlte/extras';
 	import { Vector3, Box3, Spherical, Mesh } from 'three';
 
 	interface Props {
@@ -42,7 +50,12 @@
 	const floorY = $derived(verticalShift - (2 * boxHeight) / 3);
 
 	const { camera } = useThrelte();
-	const gltf = useGltf('/models/ship_pinnace1.glb');
+	const dracoLoader = useDraco('/draco/');
+	const meshoptDecoder = useMeshopt();
+	const gltf = useGltf('/models/ship_pinnace1_final.glb', {
+		dracoLoader,
+		meshoptDecoder
+	});
 
 	let hasNotifiedCompletion = false;
 
