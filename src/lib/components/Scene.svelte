@@ -29,6 +29,7 @@
 
 	// Use $state for reactive properties used in the template
 	let size = $state(10);
+	let boxHeight = $state(2);
 	let offset = $state(new Vector3(0, 0, 0));
 	const verticalShift = $derived(size * 0.05 + 2.5); // Slightly higher base offset
 
@@ -37,8 +38,13 @@
 	// Look even lower to move the ship up in the viewport
 	const cameraTarget = $derived(new Vector3(0, verticalShift - size * 0.25, 0));
 
-	const { camera, scene } = useThrelte();
+	// Calculate floor position (bottom of ship + custom hover offset)
+	const floorY = $derived(verticalShift - (2 * boxHeight) / 3);
+
+	const { camera } = useThrelte();
 	const gltf = useGltf('/models/ship_pinnace1.glb');
+
+	let hasNotifiedCompletion = false;
 
 	$effect(() => {
 		if ($gltf) {
@@ -59,6 +65,7 @@
 			// Auto-center the model
 			offset = boxCenter.clone().multiplyScalar(-1);
 			size = Math.max(boxSize.x, boxSize.y, boxSize.z);
+			boxHeight = boxSize.y;
 			rotation = 0; // Reset rotation to 0 when model appears
 		}
 	});
@@ -76,6 +83,7 @@
 
 	useTask((delta) => {
 		if (targetView) {
+			hasNotifiedCompletion = false;
 			// Limit delta to prevent large jumps on frame drops
 			const dt = Math.min(delta, 0.1);
 			const lerpFactor = 1 - Math.exp(-dt * 4);
@@ -120,7 +128,8 @@
 				// 4. Check for completion
 				const distToTarget = camera.current.position.distanceTo(targetPos);
 				// Ensure model is loaded and we are close to target before completing
-				if ($gltf && distToTarget < 0.01 && Math.abs(rotation) < 0.001) {
+				if ($gltf && distToTarget < 0.01 && Math.abs(rotation) < 0.001 && !hasNotifiedCompletion) {
+					hasNotifiedCompletion = true;
 					onTransitionComplete?.();
 				}
 			}
@@ -154,26 +163,28 @@
 	{/if}
 </T.Group>
 
-<ContactShadows
-	position.y={-verticalShift}
-	scale={size * 2}
-	blur={2}
-	far={size}
-	opacity={0.5}
-	color="#000000"
-/>
+{#if $gltf}
+	<ContactShadows
+		position.y={floorY}
+		scale={size * 2}
+		blur={2}
+		far={size}
+		opacity={0.5}
+		color="#000000"
+	/>
 
-<Grid
-	position.y={-verticalShift}
-	sectionSize={size / 5}
-	sectionThickness={1}
-	sectionColor="#333333"
-	gridSize={size * 4}
-	cellSize={size / 20}
-	cellThickness={0.5}
-	cellColor="#222222"
-	infiniteGrid
-	fadeDistance={size * 3}
-	fadeStrength={5}
-	receiveShadow
-/>
+	<Grid
+		position.y={floorY}
+		sectionSize={size / 5}
+		sectionThickness={1}
+		sectionColor="#333333"
+		gridSize={size * 4}
+		cellSize={size / 20}
+		cellThickness={0.5}
+		cellColor="#222222"
+		infiniteGrid
+		fadeDistance={size * 3}
+		fadeStrength={5}
+		receiveShadow
+	/>
+{/if}
