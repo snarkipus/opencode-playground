@@ -129,6 +129,7 @@ Use the `dark` class variant for dark mode overrides.
 
 ### Shadcn-svelte Components
 
+- **Guides & References**: See `docs/vendor/shadcn-svelte/llms.txt` for shadcn-svelte guides, references, and best practices.
 - **Location**: `src/lib/components/ui`
 - **Installation**: Use the CLI for new components: `npx shadcn-svelte@latest add [component]`
 - **Structure**: Components are "owned" code. You can modify them directly if needed, but prefer wrapping or extending.

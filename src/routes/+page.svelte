@@ -5,10 +5,31 @@
 	import { browser } from '$app/environment';
 
 	let paused = $state(false);
+	type View = 'front' | 'back' | 'left' | 'right' | 'top';
+	let targetView = $state<View | 'initial' | null>(null);
 
 	function togglePause() {
 		paused = !paused;
+		if (!paused) targetView = null;
 	}
+
+	function snapTo(view: View) {
+		paused = true;
+		targetView = view;
+	}
+
+	function resume() {
+		targetView = 'initial';
+	}
+
+	function handleTransitionComplete() {
+		if (targetView === 'initial') {
+			paused = false;
+		}
+		targetView = null;
+	}
+
+	const views: View[] = ['front', 'back', 'left', 'right', 'top'];
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
@@ -18,16 +39,30 @@
 	<p class="text-muted-foreground leading-7 not-first:mt-6">
 		Interactive 3D Ship Demo with Threlte
 	</p>
-	<Button onclick={togglePause}>
-		{paused ? 'Resume' : 'Pause'} Rotation
-	</Button>
+	<div class="flex gap-2">
+		<Button onclick={togglePause} variant="secondary">
+			{paused ? 'Resume' : 'Pause'} Rotation
+		</Button>
+	</div>
 
 	{#if browser}
 		<!-- 3D Scene Demo -->
-		<div class="relative mt-4 h-140 w-full overflow-hidden rounded-lg border">
+		<div class="relative mt-4 h-140 w-full max-w-[800px] overflow-hidden rounded-lg border">
 			<Canvas>
-				<Scene {paused} />
+				<Scene {paused} {targetView} onTransitionComplete={handleTransitionComplete} />
 			</Canvas>
+		</div>
+
+		<!-- Snap Controls -->
+		<div class="flex flex-wrap justify-center gap-2">
+			{#each views as view}
+				<Button variant="outline" onclick={() => snapTo(view)}>
+					{view.charAt(0).toUpperCase() + view.slice(1)}
+				</Button>
+			{/each}
+			<Button variant="ghost" onclick={resume} disabled={!paused && !targetView}>
+				Reset & Resume
+			</Button>
 		</div>
 	{/if}
 </div>
